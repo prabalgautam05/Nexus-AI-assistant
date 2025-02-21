@@ -15,7 +15,7 @@ To install Nexus AI Assistant, follow these steps:
 
 1. Clone the repository:
     ```sh
-    git clone https://github.com/yourusername/Nexus-AI-assistant.git
+    git clone https://github.com/prabalgautam05/Nexus-AI-assistant.git
     ```
 2. Navigate to the project directory:
     ```sh
