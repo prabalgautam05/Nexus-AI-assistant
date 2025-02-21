@@ -1,4 +1,0 @@
-# Replace these with your actual API keys
-WEATHER_API_KEY = "67f71797566df93eafdd11fba9afd060"  # OpenWeatherMap API Key
-NEWS_API_KEY = "4ebfddd7a85249fdb63b13c6ed8007cd"     # NewsAPI Key
-GEMINI_API_KEY = "AIzaSyD8MVgsL45vyhpZ0E_XroD5ptjVWUbwP9w"  # Google Gemini API Key
