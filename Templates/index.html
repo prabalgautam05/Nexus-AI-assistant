@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nexus - Your AI Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Roboto&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #121212;
+      --accent: #00FFFF;
+      --accent-secondary: #1F51FF;
+      --lime: #32CD32;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --glass-blur: blur(12px);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Roboto', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: white;
+      overflow: hidden;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: var(--glass-blur);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Link styling inside chat messages */
+.message a {
+  color: #00FFFF;
+  text-decoration: none;
+  transition: 0.2s ease-in-out;
+  word-break: break-word;
+}
+
+.message a:hover {
+  text-decoration: underline;
+  color: #32CD32; /* Optional lime green glow effect on hover */
+}
+.message a:hover {
+  text-decoration: underline;
+  color: #32CD32;
+  text-shadow: 0 0 8px #00FFFF;
+}
+
+
+    header h1 {
+      font-family: 'Orbitron', sans-serif;
+      color: var(--accent);
+      font-size: 1.5rem;
+    }
+
+    header .datetime {
+      font-size: 1rem;
+      color: #ccc;
+    }
+
+    #container {
+      display: flex;
+      height: calc(100vh - 70px);
+    }
+
+    #sidebar {
+      width: 250px;
+      background: var(--card-bg);
+      backdrop-filter: var(--glass-blur);
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+      gap: 1rem;
+    }
+
+    .action-btn {
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: 0.3s;
+    }
+
+    .action-btn:hover {
+      background: var(--accent-secondary);
+    }
+
+    #chat-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      position: relative;
+      padding: 1rem 2rem;
+    }
+
+    #chat-box {
+      overflow-y: auto;
+      flex: 1;
+      padding-right: 10px;
+    }
+
+    .message {
+      max-width: 60%;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      border-radius: 20px;
+      background: var(--card-bg);
+      backdrop-filter: var(--glass-blur);
+      animation: fadeIn 0.4s ease;
+    }
+    #nexusPopup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  backdrop-filter: blur(6px);
+}
+
+#nexusCard {
+  background: rgba(255, 255, 255, 0.07);
+  color: white;
+  padding: 2rem;
+  width: 90%;
+  max-width: 500px;
+  border-radius: 16px;
+  box-shadow: 0 0 20px #00FFFF50;
+  text-align: center;
+  position: relative;
+  animation: fadeIn 0.3s ease;
+}
+
+#nexusCard h2 {
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+
+#nexusCard p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+#closePopup {
+  position: absolute;
+  top: 10px;
+  right: 18px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #ccc;
+}
+
+#closePopup:hover {
+  color: var(--lime);
+}
+
+
+    .message.user {
+      align-self: flex-end;
+      background: var(--accent);
+      color: black;
+    }
+
+    .message.ai {
+      align-self: flex-start;
+    }
+
+    #input-area {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    #user-input {
+      flex: 1;
+      padding: 0.75rem;
+      border-radius: 12px;
+      border: none;
+      outline: none;
+      background: var(--card-bg);
+      color: white;
+    }
+
+    #onboarding {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(to right, #0f0c29, #302b63, #24243e);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 10;
+      color: white;
+      font-size: 1.5rem;
+      animation: fadeIn 1.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    a.full-btn {
+      color: inherit;
+      text-decoration: none;
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="onboarding">Initializing Nexus...</div>
+
+  <header>
+    <h1>Nexus</h1>
+    <div class="datetime" id="datetime">--:-- --</div>
+  </header>
+
+  <div id="container">
+    <div id="sidebar">
+      <div class="action-btn" id="aboutBtn">ℹ️ About Nexus</div>
+
+      <div class="action-btn" id="newsBtn">News</div>
+      <div class="action-btn" id="weatherBtn">Weather</div>
+      <div class="action-btn"><a class="full-btn" href="https://dreamvista.duckdns.org" target="_blank">DreamVista</a></div>
+      <div class="action-btn"><a class="full-btn" href="/static/downloads/main.exe" download>Download .EXE</a></div>
+    </div>
+
+    <div id="chat-section">
+      <div id="chat-box"></div>
+      <div id="input-area">
+        <input type="text" id="user-input" placeholder="Ask me anything..." />
+      </div>
+    </div>
+  </div>
+
+<script>
+const onboarding = document.getElementById('onboarding');
+setTimeout(() => onboarding.style.display = 'none', 2000);
+
+const input = document.getElementById('user-input');
+const chatBox = document.getElementById('chat-box');
+
+
+input.addEventListener('keypress', async (e) => {
+  if (e.key === 'Enter' && input.value.trim()) {
+    const userMsg = input.value.trim();
+    appendMessage('user', userMsg);
+    input.value = '';
+    input.disabled = true;
+    appendMessage('ai', 'Typing...');
+
+    try {
+      const reply = await fetchGeminiReply(userMsg);
+      replaceLastAIMessage(reply);
+    } catch (err) {
+      console.error(err);
+      replaceLastAIMessage("⚠️ Sorry, something went wrong.");
+    } finally {
+      input.disabled = false;
+      input.focus();
+    }
+  }
+});
+function appendMessage(sender, text) {
+  const div = document.createElement('div');
+  div.className = `message ${sender}`;
+  div.innerHTML = text; // ✅ Use this for formatting
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+
+function replaceLastAIMessage(newText) {
+  const messages = document.querySelectorAll('.message.ai');
+  const lastAI = messages[messages.length - 1];
+  if (lastAI) lastAI.textContent = newText;
+}
+
+async function fetchGeminiReply(prompt) {
+  const response = await fetch("/ask-gemini", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ message: prompt })
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to get Gemini response");
+  }
+
+  const data = await response.json();
+  return data.reply || "🤖 No response.";
+}
+
+document.getElementById("weatherBtn").addEventListener("click", function () {
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        fetch("/get-weather", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lat: latitude, lon: longitude })
+        })
+        .then(res => res.json())
+        .then(data => appendMessage("ai", data.reply))
+        .catch(() => appendMessage("ai", "❌ Error fetching weather."));
+      },
+      () => appendMessage("ai", "⚠️ Location access denied.")
+    );
+  } else {
+    appendMessage("ai", "❌ Geolocation not supported.");
+  }
+});
+
+document.getElementById("newsBtn").addEventListener("click", () => {
+  const topic = prompt("Enter topic for news (e.g., technology, sports, world):") || "latest";
+  fetch("/get-news", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ topic })
+  })
+  .then(res => res.json())
+  .then(data => appendMessage("ai", data.reply))
+  .catch(() => appendMessage("ai", "❌ Error fetching news."));
+});
+
+// Update time every second
+function updateDateTime() {
+  const dt = new Date();
+  const time = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const date = dt.toLocaleDateString();
+  document.getElementById("datetime").textContent = `${date} | ${time}`;
+}
+setInterval(updateDateTime, 1000);
+updateDateTime();
+
+document.addEventListener("DOMContentLoaded", () => {
+  const aboutBtn = document.getElementById("aboutBtn");
+  const popup = document.getElementById("nexusPopup");
+  const closeBtn = document.getElementById("closePopup");
+
+  aboutBtn.addEventListener("click", () => {
+    popup.style.display = "flex";
+  });
+
+  closeBtn.addEventListener("click", () => {
+    popup.style.display = "none";
+  });
+
+  popup.addEventListener("click", (e) => {
+    if (e.target === popup) {
+      popup.style.display = "none";
+    }
+  });
+});
+
+</script>
+
+<div id="nexusPopup" style="display: none;">
+  <div id="nexusCard">
+    <span id="closePopup">&times;</span>
+    <h2>Nexus AI</h2>
+    <p>🤖 Nexus is your personal AI assistant built with Gemini, capable of answering queries, fetching real-time news, weather updates, and even analyzing your dreams. Designed for speed, simplicity, and style.</p>
+    <p><strong>Features:</strong> Gemini Chat · News · Weather · Dream Analysis · Desktop EXE Download</p>
+  </div>
+</div>
+
+</body>
+</html>

@@ -7,6 +7,7 @@ import speech_recognition as sr
 from PIL import Image, ImageTk
 import config  # Ensure you have config.py with your API key
 import os
+import sys
 import subprocess
 import psutil
 import webbrowser
@@ -215,6 +216,7 @@ def listen_for_command():
             speak_text("Sorry, my speech service is down.")
 
 # Function to execute selected command from dropdown
+command_var = None
 def execute_selected_command():
     global command_var
     selected_command = command_var.get()
@@ -225,32 +227,36 @@ def execute_selected_command():
 def show_welcome_image():
     splash = tk.Tk()
     splash.title("Welcome to Nexus AI")
-    splash.geometry("600x400")  # Adjust window size
+    splash.geometry("600x400")
     splash.configure(bg="#1e1e1e")
 
-    # Center the splash screen on the screen
+    # Center the splash screen
     screen_width = splash.winfo_screenwidth()
     screen_height = splash.winfo_screenheight()
     x = (screen_width // 2) - (600 // 2)
     y = (screen_height // 2) - (400 // 2)
     splash.geometry(f"600x400+{x}+{y}")
 
-    # Load and display the image
-    image = Image.open("nexus AI.png")
-    image = image.resize((600, 400))  # Resize image to fit window
+    # ✅ Dynamically resolve the path to the image (for PyInstaller)
+    if getattr(sys, 'frozen', False):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.abspath(".")
+
+    image_path = os.path.join(base_path, "assets", "nexus AI.png")
+    image = Image.open(image_path)
+    image = image.resize((600, 400))
     photo = ImageTk.PhotoImage(image)
+
     label = tk.Label(splash, image=photo, bg="#1e1e1e")
-    label.image = photo  # Keep a reference to avoid garbage collection
+    label.image = photo
     label.pack()
 
-    # Set a delay before closing the splash window and showing the main application
     splash.after(3000, lambda: (splash.destroy(), show_main_application()))
-
     splash.mainloop()
-
 # Function to show the main application
 def show_main_application():
-    global root
+    global root, chat_display, user_input, command_var  # Declare global variables
     root = tk.Tk()
     root.title("Nexus AI Chatbot with Chat History & Speech Control")
     root.configure(bg="#1e1e1e")
