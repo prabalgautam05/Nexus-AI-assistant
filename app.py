@@ -1,8 +1,36 @@
 from flask import Flask, render_template, request, jsonify
 import requests
-from config import API_KEY, WEATHER_API_KEY, NEWS_API_KEY
+import google.generativeai as genai
+from config import GEMINI_API_KEY, WEATHER_API_KEY, NEWS_API_KEY
 
 app = Flask(__name__)
+app.config["JSONIFY_PRETTYPRINT_REGULAR"] = True
+# ✅ Proper Gemini configuration
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel("gemini-2.0-flash-thinking-exp-01-21")  # or "gemini-1.5-pro" if enabled
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+@app.route("/ask-gemini", methods=["POST"])
+def ask_gemini():
+    user_input = request.json.get("message", "").strip()
+    if not user_input:
+        return jsonify({"reply": "Please enter a message."})
+
+    try:
+        chat = model.start_chat()
+        response = chat.send_message(user_input)
+        reply_text = response.text
+
+        # Just return raw text as plain string
+        return jsonify({"reply": reply_text})
+    except Exception as e:
+        print("Gemini Error:", e)
+        return jsonify({"reply": "⚠️ Gemini API error. Please try again."})
+
 
 @app.route("/get-news", methods=["POST"])
 def get_news():
@@ -15,12 +43,11 @@ def get_news():
         if not articles:
             return jsonify({"reply": f"No news found for topic: {topic}"})
 
-        # Build clean HTML with spacing and styling
         news_html = f"<strong>🗞 Top 10 News for '{topic.title()}':</strong><br><br>"
         for i, article in enumerate(articles):
             title = article['title']
-            url = article['url']
-            news_html += f"<div style='margin-bottom: 15px;'><strong>{i+1}.</strong> {title}<br>🔗 <a href='{url}' target='_blank'>{url}</a></div>"
+            link = article['url']
+            news_html += f"<div style='margin-bottom: 15px;'><strong>{i+1}.</strong> {title}<br>🔗 <a href='{link}' target='_blank'>{link}</a></div>"
 
         return jsonify({"reply": news_html})
     except Exception as e:
@@ -45,55 +72,17 @@ def get_weather():
             return jsonify({"reply": "Weather data unavailable for your location."})
 
         weather_info = (
-            f"📍 {data['name']}, {data['sys']['country']}\n"
-            f"🌤 {data['weather'][0]['description'].title()}\n"
-            f"🌡 Temperature: {data['main']['temp']}°C\n"
-            f"💧 Humidity: {data['main']['humidity']}%\n"
+            f"📍 {data['name']}, {data['sys']['country']}<br>"
+            f"🌤 {data['weather'][0]['description'].title()}<br>"
+            f"🌡 Temperature: {data['main']['temp']}°C<br>"
+            f"💧 Humidity: {data['main']['humidity']}%<br>"
             f"🌬 Wind: {data['wind']['speed']} m/s"
         )
         return jsonify({"reply": weather_info})
-    except:
+    except Exception as e:
+        print("Error fetching weather:", e)
         return jsonify({"reply": "Couldn't fetch weather details. Try again later."})
 
 
-@app.route("/")
-def index():
-    return render_template("index.html")
-
-@app.route("/ask-gemini", methods=["POST"])
-def ask_gemini():
-    user_input = request.json.get("message", "")
-    if not user_input:
-        return jsonify({"reply": "Please enter a message."})
-
-    print(f"Querying Gemini with: {user_input}")  # 🔍 Log what you're asking
-
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash-thinking-exp-01-21:generateContent?key={API_KEY}"
-
-    payload = {
-        "contents": [
-            {"parts": [{"text": user_input}]}
-        ],
-        "generationConfig": {
-            "temperature": 0.7,
-            "topK": 40,
-            "topP": 0.95,
-            "maxOutputTokens": 400
-        }
-    }
-
-    headers = {"Content-Type": "application/json"}
-    response = requests.post(url, headers=headers, json=payload)
-
-    print("Gemini response:", response.text)  # 🔍 Log raw Gemini response
-
-    try:
-        data = response.json()
-        reply = data["candidates"][0]["content"]["parts"][0]["text"]
-    except (KeyError, IndexError):
-        reply = "I couldn't process that right now. Please try again."
-
-    return jsonify({"reply": reply})
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=8000, debug=True)

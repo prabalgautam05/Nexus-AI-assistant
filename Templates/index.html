@@ -197,6 +197,8 @@
       color: white;
     }
 
+    
+
     #onboarding {
       position: fixed;
       top: 0;
@@ -357,24 +359,19 @@ function updateDateTime() {
 setInterval(updateDateTime, 1000);
 updateDateTime();
 
-document.addEventListener("DOMContentLoaded", () => {
-  const aboutBtn = document.getElementById("aboutBtn");
-  const popup = document.getElementById("nexusPopup");
-  const closeBtn = document.getElementById("closePopup");
+document.getElementById("aboutBtn").addEventListener("click", () => {
+  document.getElementById("nexusPopup").style.display = "flex";
+});
 
-  aboutBtn.addEventListener("click", () => {
-    popup.style.display = "flex";
-  });
+document.getElementById("closePopup").addEventListener("click", () => {
+  document.getElementById("nexusPopup").style.display = "none";
+});
 
-  closeBtn.addEventListener("click", () => {
-    popup.style.display = "none";
-  });
-
-  popup.addEventListener("click", (e) => {
-    if (e.target === popup) {
-      popup.style.display = "none";
-    }
-  });
+// Optional: close on background click
+document.getElementById("nexusPopup").addEventListener("click", (e) => {
+  if (e.target.id === "nexusPopup") {
+    e.currentTarget.style.display = "none";
+  }
 });
 
 </script>
